@@ -1,0 +1,189 @@
+<?php
+//Configuration File
+include('config.php'); 
+$login_button = '';
+
+//Google Account redirct to PHP script then this variable value has been received
+if(isset($_GET["code"]))
+{
+//exchange a code for an valid token.
+
+$token = $google_client->fetchAccessTokenWithAuthCode($_GET["code"]);
+
+//checking errors occur during geting token
+
+if(!isset($token['error']))
+
+{
+//access token requests
+
+$google_client->setAccessToken($token['access_token']);
+
+//Store "access_token" in $_SESSION.
+
+$_SESSION['access_token'] = $token['access_token'];
+
+//Create Object IN OAuth 2 class
+
+$google_service = new Google_Service_Oauth2($google_client);
+
+//Get user profile details
+
+$data = $google_service->userinfo->get();
+
+//profile data and store into $_SESSION
+
+if(!empty($data['given_name']))
+{
+$_SESSION['user_first_name'] = $data['given_name'];
+}
+if(!empty($data['family_name']))
+{
+$_SESSION['user_last_name'] = $data['family_name'];
+}
+if(!empty($data['email']))
+{
+$_SESSION['user_email_address'] = $data['email'];
+}
+if(!empty($data['gender']))
+{
+$_SESSION['user_image'] = $data['picture'];
+}
+}
+}
+//check user login into system by using Google account
+if(!isset($_SESSION['access_token']))
+{
+//Create a URL for user authorization
+$login_button = '<a href="'.$google_client->createAuthUrl().'"><img src="sign-in-with-google.png" /></a>';
+}
+?>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Sign up using Google Account</title>
+<meta content='width=device-width, initial-scale=1, maximum-scale=1' name='viewport'/>
+
+
+
+
+ <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+  
+  <style>
+	  .frame{
+		  border: 1px solid black;
+		  padding: 20px;
+		  border-radius: 10px;
+		  padding-top: 40px;
+		  padding-bottom: 40px;
+	  }
+	  .btn{
+		  width: 100%;
+	  }
+	  .googleBtn{
+		  width: 75%;
+		  margin-left: auto;
+		  margin-right: auto;
+		  height: 40px;;
+		  padding: 5px;
+		  border-radius: 5px;
+	  }
+	  .googleBtn img{
+		  width: 100%;
+		 height: auto;
+		   border-radius: 5px;
+	  }
+	  .googleBtn:hover{
+		  opacity: 0.7;
+	  }
+	  h2{
+		  display: block;
+		  background-color: green;
+		  padding: 10px;
+		  color: white;
+	  }
+	</style>
+  
+</head>
+<body>
+<div class="container">
+<br />
+<h2 align="center">Sign up using Google Account</h2>
+<br />
+<div class="panel panel-default">
+<?php
+if($login_button == '')
+{
+echo '<div class="panel-heading">Welcome User</div><div class="panel-body">';
+echo '<img src="'.$_SESSION["user_image"].'" class="img-responsive img-circle img-thumbnail" />';
+echo '<h3><b>Name :</b> '.$_SESSION['user_first_name'].' '.$_SESSION['user_last_name'].'</h3>';
+echo '<h3><b>Email :</b> '.$_SESSION['user_email_address'].'</h3>';
+echo '<h3><a href="logout.php">Logout</h3></div>';
+}
+else
+{
+	?>
+	
+	<div class="container">
+  		<div class="row">
+  			<div class="col-md-4"></div>
+			<div class="col-md-4 frame">
+				<form class="needs-validation" novalidate>
+					<label for="validationCustom01">Username</label>
+					<input type="text" class="form-control" id="validationCustom01" placeholder="Username"  required>
+					<div class="invalid-feedback">
+						Enter Username
+					</div>
+					<br>
+				   <label for="validationCustom01">Password</label>
+				   <input type="password" class="form-control" id="validationCustom02" placeholder="password"  required>
+				   <div class="invalid-feedback">
+					Enter Password
+				   </div>
+				   <br>
+				    <button class="btn btn-primary" type="submit">Submit</button>
+				   <br> <br> 
+				   
+				     <a href="<?php echo( $google_client->createAuthUrl()); ?>"><div class="googleBtn" type="submit">
+				    	<img src="images/googlebtn.png" alt="">
+				    </div></a>
+				
+				</form>
+			
+			</div>
+		</div>
+	</div>
+	
+
+<?php
+}
+?>
+</div>
+</div>
+
+
+<script>
+// JavaScript for disabling submissions if any invalid fields
+(function() {
+  'use strict';
+  window.addEventListener('load', function() {
+    // Fetch all the forms
+    var forms = document.getElementsByClassName('needs-validation');
+    // Loop
+    var validation = Array.prototype.filter.call(forms, function(form) {
+      form.addEventListener('submit', function(event) {
+        if (form.checkValidity() === false) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      }, false);
+    });
+  }, false);
+})();
+</script>
+</body>
+</html>
